@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "nanoassert": "^2.0.0",
+    "sodium-native": "^3.2.0"
+  }
+}
