@@ -33,6 +33,12 @@ class SpakeClientState {
   get N () { return this.buf.subarray(32 * 2, 32 * 3) }
   get x () { return this.buf.subarray(32 * 3, 32 * 4) }
   get X () { return this.buf.subarray(32 * 4, 32 * 5) }
+
+  set hK (bytes) { this.buf.set(bytes, 32 * 0) }
+  set hL (bytes) { this.buf.set(bytes, 32 * 1) }
+  set N (bytes) { this.buf.set(bytes, 32 * 2) }
+  set x (bytes) { this.buf.set(bytes, 32 * 3) }
+  set X (bytes) { this.buf.set(bytes, 32 * 4) }
 }
 
 class SpakeServerState {
@@ -60,6 +66,12 @@ class SpakeKeys {
   get L () { return this.buf.subarray(32 * 2, 32 * 3) }
   get hK () { return this.buf.subarray(32 * 3, 32 * 4) }
   get hL () { return this.buf.subarray(32 * 4, 32 * 5) }
+
+  set M (bytes) { this.buf.set(bytes, 32 * 0) }
+  set N (bytes) { this.buf.set(bytes, 32 * 1) }
+  set L (bytes) { this.buf.set(bytes, 32 * 2) }
+  set hK (bytes) { this.buf.set(bytes, 32 * 3) }
+  set hL (bytes) { this.buf.set(bytes, 32 * 4) }
 }
 
 class SpakeValidators {
