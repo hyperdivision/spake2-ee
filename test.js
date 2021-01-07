@@ -1,6 +1,5 @@
-const h = require('./header')
 const { crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE } = require('sodium-native')
-const spake = require('./')
+const { Server, Client, SpakeSharedKeys } = require('./')
 
 const [ OPS, MEM ] = [ crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE ]
 
@@ -8,21 +7,18 @@ const pwd = Buffer.from('password')
 const clientId = Buffer.from('client')
 const serverId = Buffer.from('server')
 
-const server = new h.SpakeServerState(Buffer.alloc(h.SpakeServerState.byteLength))
-const client = new h.SpakeClientState(Buffer.alloc(h.SpakeClientState.byteLength))
-const sharedKeys = new h.SpakeSharedKeys(Buffer.alloc(h.SpakeSharedKeys.byteLength))
+const server = new Server(serverId)
+const client = new Client(clientId)
+const sharedKeys = new SpakeSharedKeys()
 
-const store = Buffer.alloc(h.crypto_spake_STOREDBYTES)
-const public = Buffer.alloc(h.crypto_spake_PUBLICDATABYTES)
+server.store(pwd, OPS, MEM, Buffer.from('579daa4d7bf3ca0e0b6c48b90c4ec515', 'hex'))
 
-const response1 = Buffer.alloc(h.crypto_spake_RESPONSE1BYTES)
-const response2 = Buffer.alloc(h.crypto_spake_RESPONSE2BYTES)
-const response3 = Buffer.alloc(h.crypto_spake_RESPONSE3BYTES)
+const public = server.init()
 
-spake.serverStore(store, pwd, OPS, MEM, Buffer.from('579daa4d7bf3ca0e0b6c48b90c4ec515', 'hex'))
+const res1 = client.generate(public, pwd, Buffer.from('65938d85b4b9649ecb9df6b9176d692dea309d557bca39507750a6883744c60f', 'hex'))
+const res2 = server.respond(client.id, res1, Buffer.from('78a21685c809888742ca71d7a9ea10f2d123564b5661a5e14e18c7ed62e1ce3c', 'hex'))
+const res3 = client.finalise(sharedKeys, server.id, res2)
+const sharedKeys1 = server.finalise(res3)
 
-spake.step0(server, public, store)
-spake.step1(client, response1, public, pwd, Buffer.from('65938d85b4b9649ecb9df6b9176d692dea309d557bca39507750a6883744c60f', 'hex'))
-spake.step2(server, response2, clientId, serverId, store, response1, Buffer.from('78a21685c809888742ca71d7a9ea10f2d123564b5661a5e14e18c7ed62e1ce3c', 'hex'))
-spake.step3(client, response3, sharedKeys, clientId, serverId, response2)
-spake.step4(server, sharedKeys, response3)
+console.log(Buffer.compare(sharedKeys1.clientSk, sharedKeys.clientSk) === 0)
+console.log(Buffer.compare(sharedKeys1.serverSk, sharedKeys.serverSk) === 0)
