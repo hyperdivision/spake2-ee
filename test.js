@@ -1,5 +1,5 @@
 const { crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE } = require('sodium-native')
-const { Server, Client, SpakeSharedKeys } = require('./')
+const { ServerSide, ClientSide, SpakeSharedKeys } = require('./')
 
 const [ OPS, MEM ] = [ crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE ]
 
@@ -7,11 +7,11 @@ const pwd = Buffer.from('password')
 const clientId = Buffer.from('client')
 const serverId = Buffer.from('server')
 
-const server = new Server(serverId)
-const client = new Client(clientId)
-const sharedKeys = new SpakeSharedKeys()
+const storedData =  ClientSide.register(pwd, OPS, MEM, Buffer.from('579daa4d7bf3ca0e0b6c48b90c4ec515', 'hex'))
 
-server.store(pwd, OPS, MEM, Buffer.from('579daa4d7bf3ca0e0b6c48b90c4ec515', 'hex'))
+const server = new ServerSide(serverId, storedData)
+const client = new ClientSide(clientId)
+const sharedKeys = new SpakeSharedKeys()
 
 const public = server.init()
 

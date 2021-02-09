@@ -2,10 +2,14 @@ const sodium = require('sodium-native')
 const assert = require('nanoassert')
 const C = require('./lib')
 const Reader = require('./lib/reader')
+const Writer = require('./lib/writer')
 
 const { createKeys, sharedKeysAndValidators } = C
 
-module.exports = class Client {
+const OPSLIMIT_DEFAULT = sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE
+const MEMLIMIT_DEFAULT = sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE
+
+module.exports = class ClientSide {
   constructor (clientId) {
     this.id = clientId
     this.state = new ClientState()
@@ -62,9 +66,9 @@ module.exports = class Client {
     try {
       sodium.crypto_scalarmult_ed25519_noclamp(Z, this.state.x, gy)
       sodium.crypto_scalarmult_ed25519(V, this.state.hL, gy)
-      sharedKeysAndValidators(this.sharedKeys, validators, this.id, serverId, this.state.X, Y, Z, this.state.hK, V)
+      sharedKeysAndValidators(this.sharedKeys, validators, Buffer.from(this.id), serverId, this.state.X, Y, Z, this.state.hK, V)
       sodium.sodium_memcmp(clientValidator, validators.clientValidator)
-    } catch {
+    } catch (e) {
       this._sanitize()
       throw new Error('Server keys invalid: protocol aborted.')
     }
@@ -76,6 +80,30 @@ module.exports = class Client {
     this._sanitize()
 
     return res
+  }
+
+  static register (passwd, opslimit = OPSLIMIT_DEFAULT, memlimit = MEMLIMIT_DEFAULT) {
+    const storedData = new Uint8Array(C.crypto_spake_STOREDBYTES)
+    const keys = new C.SpakeKeys(new Uint8Array(C.SpakeKeys.byteLength))
+
+    const salt = new Uint8Array(sodium.crypto_pwhash_SALTBYTES)
+    sodium.randombytes_buf(salt)
+
+    createKeys(keys, salt, passwd, opslimit, memlimit, sodium.crypto_pwhash_ALG_DEFAULT)
+
+    const w = new Writer(storedData)
+
+    w.u16LE(C.SERVER_VERSION)
+      .u16LE(sodium.crypto_pwhash_ALG_DEFAULT)
+      .u64LE(opslimit)
+      .u64LE(memlimit)
+      .write(salt)
+      .write(keys.M)
+      .write(keys.N)
+      .write(keys.hK)
+      .write(keys.L)
+
+    return storedData
   }
 
   _sanitize () {

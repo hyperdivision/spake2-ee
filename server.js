@@ -6,38 +6,17 @@ const Reader = require('./lib/reader')
 
 const { createKeys, sharedKeysAndValidators } = C
 
-module.exports = class Server {
-  constructor (serverId) {
-    this.id = serverId
+module.exports = class ServerSide {
+  constructor (serverId, storedData) {
+    assert(storedData.byteLength === C.crypto_spake_STOREDBYTES)
+
+    this.id = Buffer.from(serverId)
     this.validator = new Uint8Array(32)
     this.sharedKeys = new C.SpakeSharedKeys(C.SpakeSharedKeys.byteLength)
-    this.storedData = new Uint8Array(C.crypto_spake_STOREDBYTES)
-  }
-
-  store (passwd, opslimit, memlimit) {
-    const keys = new C.SpakeKeys(new Uint8Array(C.SpakeKeys.byteLength))
-
-    const salt = new Uint8Array(sodium.crypto_pwhash_SALTBYTES)
-    sodium.randombytes_buf(salt)
-
-    createKeys(keys, salt, passwd, opslimit, memlimit, sodium.crypto_pwhash_ALG_DEFAULT)
-
-    const w = new Writer(this.storedData)
-
-    w.u16LE(C.SERVER_VERSION)
-      .u16LE(sodium.crypto_pwhash_ALG_DEFAULT)
-      .u64LE(opslimit)
-      .u64LE(memlimit)
-      .write(salt)
-      .write(keys.M)
-      .write(keys.N)
-      .write(keys.hK)
-      .write(keys.L)
+    this.storedData = storedData
   }
 
   init () {
-    assert(this.storedData.byteLength === C.crypto_spake_STOREDBYTES)
-
     this._sanitize()
 
     const publicData = new Uint8Array(C.crypto_spake_PUBLICDATABYTES)
@@ -97,9 +76,8 @@ module.exports = class Server {
     try {
       sodium.crypto_scalarmult_ed25519_noclamp(Z, y, gx)
       sodium.crypto_scalarmult_ed25519_noclamp(V, y, keys.L)
-      sharedKeysAndValidators(this.sharedKeys, validators, clientId, this.id, X, Y, Z, keys.hK, V)
+      sharedKeysAndValidators(this.sharedKeys, validators, Buffer.from(clientId), this.id, X, Y, Z, keys.hK, V)
     } catch (e) {
-      console.log(e)
       this._sanitize()
       throw new Error('Client keys invalid: protocol aborted.')
     }
