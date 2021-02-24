@@ -3,5 +3,25 @@
   "dependencies": {
     "nanoassert": "^2.0.0",
     "sodium-native": "^3.2.0"
-  }
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "description": "Implementation of SPAKE2-EE password authenticated key agreement protocol described [here](https://moderncrypto.org/mail-archive/curves/2015/000424.html)",
+  "version": "0.0.0",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyperdivision/spake2-ee.git"
+  },
+  "author": "Christophe Diederichs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hyperdivision/spake2-ee/issues"
+  },
+  "homepage": "https://github.com/hyperdivision/spake2-ee#readme"
 }
