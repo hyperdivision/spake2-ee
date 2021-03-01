@@ -10,7 +10,7 @@ module.exports = class ServerSide {
   constructor (serverId, storedData) {
     assert(storedData.byteLength === C.crypto_spake_STOREDBYTES)
 
-    this.id = Buffer.from(serverId)
+    this.id = serverId
     this.validator = new Uint8Array(32)
     this.sharedKeys = new C.SpakeSharedKeys(C.SpakeSharedKeys.byteLength)
     this.storedData = storedData
@@ -76,7 +76,7 @@ module.exports = class ServerSide {
     try {
       sodium.crypto_scalarmult_ed25519_noclamp(Z, y, gx)
       sodium.crypto_scalarmult_ed25519_noclamp(V, y, keys.L)
-      sharedKeysAndValidators(this.sharedKeys, validators, Buffer.from(clientId), this.id, X, Y, Z, keys.hK, V)
+      sharedKeysAndValidators(this.sharedKeys, validators, clientId, this.id, X, Y, Z, keys.hK, V)
     } catch (e) {
       this._sanitize()
       throw new Error('Client keys invalid: protocol aborted.')

@@ -66,7 +66,7 @@ module.exports = class ClientSide {
     try {
       sodium.crypto_scalarmult_ed25519_noclamp(Z, this.state.x, gy)
       sodium.crypto_scalarmult_ed25519(V, this.state.hL, gy)
-      sharedKeysAndValidators(this.sharedKeys, validators, Buffer.from(this.id), serverId, this.state.X, Y, Z, this.state.hK, V)
+      sharedKeysAndValidators(this.sharedKeys, validators, this.id, serverId, this.state.X, Y, Z, this.state.hK, V)
       sodium.sodium_memcmp(clientValidator, validators.clientValidator)
     } catch (e) {
       this._sanitize()
